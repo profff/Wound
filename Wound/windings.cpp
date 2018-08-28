@@ -56,7 +56,8 @@ void Windings::setWindingType(int val)
 
 void Windings::calculate()
 {
-    m_PolarStep=m_SlotCount/m_PoleCount; emit PolarStepChanged(m_PolarStep);
+    m_PolarStep=m_SlotCount/m_PoleCount;
+    emit PolarStepChanged(m_PolarStep);
     switch(m_WindingType)
     {
         case wt_interlaced:
@@ -66,20 +67,48 @@ void Windings::calculate()
         case wt_diametral:
             m_CoilGroupCount=m_PoleCount/2;
         break;
-    }; emit CoilGroupCountChanged(m_CoilGroupCount);
-    m_SlotPerPhaseCount=m_SlotCount/m_PhaseCount;emit SlotPerPhaseCountChanged(m_SlotPerPhaseCount);
-    m_SlotPerCoilGroupCount=m_SlotPerPhaseCount/m_CoilGroupCount; emit SlotPerCoildGroupCounthanged(m_SlotPerCoilGroupCount);
-    m_SlotPerCoilCount=m_SlotPerCoilGroupCount/2;emit SlotPerCoilCountChanged(m_SlotPerCoilCount);
+    };
+    emit CoilGroupCountChanged(m_CoilGroupCount);
+    m_SlotPerPhaseCount=m_SlotCount/m_PhaseCount;
+    emit SlotPerPhaseCountChanged(m_SlotPerPhaseCount);
+    m_SlotPerCoilGroupCount=m_SlotPerPhaseCount/m_CoilGroupCount;
+    emit SlotPerCoildGroupCounthanged(m_SlotPerCoilGroupCount);
+    m_SlotPerCoilCount=m_SlotPerCoilGroupCount/2;
+    emit SlotPerCoilCountChanged(m_SlotPerCoilCount);
+
     ExtLayer.clear();
     IntLayer.clear();
 
+    int slot =0;
+    int layer =0;
     int ph=0;
     //while(ph < m_PhaseCount)
     {
         int pl=0;
-        //while(pl<m_PoleCount)
+        while(pl<m_PoleCount)
         {
+            int cl=0;
+            while(cl<m_SlotPerCoilCount)
+            {
+                slotconfig* sc=new slotconfig;
+                sc->Id=slot+cl;
+                sc->Phase=ph;
+                sc->CoilDirection=up;
+                sc->PoleNumber=pl;
+                if(!layer)
+                    IntLayer.insert(slot,sc);
 
+                sc=new slotconfig;
+                sc->Id=slot+cl+m_PolarStep;
+                sc->Phase=ph;
+                sc->CoilDirection=down;
+                sc->PoleNumber=pl;
+                if(!layer)
+                    IntLayer.insert(slot+cl+m_PolarStep,sc);
+
+                cl++;
+            }
+            slot+=m_PolarStep;
             pl++;
         }
         ph++;

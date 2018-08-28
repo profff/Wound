@@ -22,19 +22,20 @@ void WindingFlatViewer::paintEvent(QPaintEvent *)
     int side = qMax(width(), height());
     QColor SlotColor(127, 127, 127);
     QPainter painter(this);
+    const qreal factor=400;
+    painter.setPen(SlotColor);
+    painter.setBrush(QColor(255,127,127));
+    painter.setFont(QFont("verdana",3));
+    QFontMetrics fm=painter.fontMetrics();
+    qreal sector=factor/(m_SlotCount*2);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(0, height() / 2);
-    painter.scale(side/300, side / 300);
-    painter.setFont(QFont("verdana",2));
-    QFontMetrics fm=painter.fontMetrics();
-    painter.setBrush(QColor(255,127,127));
-    qreal sector=300/(m_SlotCount*2);
+    painter.scale(side / factor, side / factor);
+
     for (int i = 0; i < m_SlotCount; ++i) {
-        painter.setPen(SlotColor);
-        painter.drawRoundRect(QRect(QPoint(sector/2,0),QPoint(sector+sector/2,fm.height())),5); // int layer
-        painter.drawRoundRect(QRect(QPoint(0,-fm.height()),QPoint(sector,0)),5); // ext layer
-        painter.setPen(QColor(0,0,0));
-        painter.drawText(QPoint(0,0), QString::number(i));
+        painter.drawText(QPoint(0,-fm.height()-1.5), QString::number(i));
+        painter.drawRoundRect(QRect(QPoint(0,-3),QPoint(sector,-1)),5); // ext layer
+        painter.drawRoundRect(QRect(QPoint(0,2),QPoint(sector,4)),5); // int layer
         painter.translate(sector*2,0);
     }
 }

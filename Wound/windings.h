@@ -50,10 +50,6 @@ protected:
     int m_SlotPerCoilCount;
 
     enum coildirection{
-        right,
-        left,
-    };
-    enum poledirection{
         up,
         down,
     };
@@ -62,13 +58,15 @@ protected:
         int Id;
         int Phase;
         coildirection CoilDirection;
-        poledirection PoleDirection;
+        int PoleNumber;
     };
 
-    QList <slotconfig> ExtLayer;
-    QList <slotconfig> IntLayer;
+    QList <slotconfig*> ExtLayer;
+    QList <slotconfig*> IntLayer;
 
     void calculate();
+    QColor SlotColor(slotconfig s):
+
 };
 
 #endif // WINDINGS_H
