@@ -53,6 +53,21 @@ void Windings::setWindingType(int val)
     repaint();
 }
 
+QColor Windings::SlotColor(slotconfig* s)
+{
+    int R,V,B;
+    int light=0;
+    if (s->CoilDirection==down)
+        light+=127;
+    switch (s->Phase)
+    {
+    case 0: R=255; V=light; B=light; break;
+    case 1: R=light; V=255; B=light; break;
+    case 2: R=light; V=light; B=255; break;
+    default : R=light; V=light; B=light; break;
+    }
+    return QColor(R,V,B);
+}
 
 void Windings::calculate()
 {
@@ -90,21 +105,21 @@ void Windings::calculate()
             int cl=0;
             while(cl<m_SlotPerCoilCount)
             {
-                slotconfig* sc=new slotconfig;
-                sc->Id=slot+cl;
-                sc->Phase=ph;
-                sc->CoilDirection=up;
-                sc->PoleNumber=pl;
+                slotconfig* scu=new slotconfig;
+                scu->Id=slot+cl;
+                scu->Phase=ph;
+                scu->CoilDirection=up;
+                scu->PoleNumber=pl;
                 if(!layer)
-                    IntLayer.insert(slot,sc);
+                    ExtLayer.insert(slot,scu);
 
-                sc=new slotconfig;
-                sc->Id=slot+cl+m_PolarStep;
-                sc->Phase=ph;
-                sc->CoilDirection=down;
-                sc->PoleNumber=pl;
+                slotconfig *scd=new slotconfig;
+                scd->Id=slot+cl+m_PolarStep;
+                scd->Phase=ph;
+                scd->CoilDirection=down;
+                scd->PoleNumber=pl;
                 if(!layer)
-                    IntLayer.insert(slot+cl+m_PolarStep,sc);
+                    ExtLayer.insert(slot+cl+m_PolarStep,scd);
 
                 cl++;
             }

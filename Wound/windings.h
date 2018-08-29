@@ -65,7 +65,7 @@ protected:
     QList <slotconfig*> IntLayer;
 
     void calculate();
-    QColor SlotColor(slotconfig s):
+    QColor SlotColor(slotconfig* s);
 
 };
 
