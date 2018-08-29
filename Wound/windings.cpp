@@ -6,6 +6,17 @@ Windings::Windings(QWidget *parent) : QWidget(parent)
     m_SlotCount=3;
     m_PoleCount=2;
     m_WindingType=wt_wavy;
+
+    Layers.clear();
+    int i=0; slotconfig* scu;
+    while(i<m_SlotCount*2)
+    {
+        scu=(slotconfig*)malloc(sizeof(slotconfig));
+        Layers.append(scu);
+        scu->Id=i%m_SlotCount;
+        i++;
+    }
+
     calculate();
 }
 
@@ -49,6 +60,7 @@ void Windings::setWindingType(int val)
     if(val==m_WindingType)
         return;
     m_WindingType=(windingtype)val;
+
     calculate();
     repaint();
 }
@@ -64,7 +76,7 @@ QColor Windings::SlotColor(slotconfig* s)
     case 0: R=255; V=light; B=light; break;
     case 1: R=light; V=255; B=light; break;
     case 2: R=light; V=light; B=255; break;
-    default : R=light; V=light; B=light; break;
+    default : R=200; V=200; B=200; break;
     }
     return QColor(R,V,B);
 }
@@ -72,7 +84,6 @@ QColor Windings::SlotColor(slotconfig* s)
 void Windings::calculate()
 {
     m_PolarStep=m_SlotCount/m_PoleCount;
-    emit PolarStepChanged(m_PolarStep);
     switch(m_WindingType)
     {
         case wt_interlaced:
@@ -83,50 +94,93 @@ void Windings::calculate()
             m_CoilGroupCount=m_PoleCount/2;
         break;
     };
-    emit CoilGroupCountChanged(m_CoilGroupCount);
     m_SlotPerPhaseCount=m_SlotCount/m_PhaseCount;
-    emit SlotPerPhaseCountChanged(m_SlotPerPhaseCount);
+    m_SlotPerPoleCount=m_SlotPerPhaseCount/m_PoleCount;
     m_SlotPerCoilGroupCount=m_SlotPerPhaseCount/m_CoilGroupCount;
-    emit SlotPerCoildGroupCounthanged(m_SlotPerCoilGroupCount);
     m_SlotPerCoilCount=m_SlotPerCoilGroupCount/2;
-    emit SlotPerCoilCountChanged(m_SlotPerCoilCount);
 
-    ExtLayer.clear();
-    IntLayer.clear();
 
-    int slot =0;
-    int layer =0;
-    int ph=0;
-    //while(ph < m_PhaseCount)
+    Layers.clear();
+    int i=0; slotconfig* scu;
+    while(i<m_SlotCount*2)
     {
+        scu=(slotconfig*)malloc(sizeof(slotconfig));
+        Layers.append(scu);
+        scu->Id=i;
+        scu->CoilDirection=down;
+        scu->Phase=-1;
+        scu->PoleNumber=-1;
+        scu->prevslot=0;
+        scu->nextslot=0;
+        scu->tag=SLOT_STANDARD;
+        i++;
+    }
+
+    int slot =0; coildirection dir=up;
+    slotconfig* prevslot=0;
+    int ph=0;
+    while(ph < m_PhaseCount)
+    {
+        slot=ph*(m_SlotCount/m_PhaseCount); // start coil is shifted of pole slot count
+        prevslot=0;
         int pl=0;
         while(pl<m_PoleCount)
         {
+            prevslot=0;
+            slotconfig* scu;
+            slotconfig* scd;
             int cl=0;
-            while(cl<m_SlotPerCoilCount)
+            while(cl<m_SlotPerPoleCount)
             {
-                slotconfig* scu=new slotconfig;
-                scu->Id=slot+cl;
+                scu=Layers[(slot+cl)%m_SlotCount];
                 scu->Phase=ph;
-                scu->CoilDirection=up;
+                scu->CoilDirection=dir;
                 scu->PoleNumber=pl;
-                if(!layer)
-                    ExtLayer.insert(slot,scu);
-
-                slotconfig *scd=new slotconfig;
-                scd->Id=slot+cl+m_PolarStep;
+                scu->prevslot=prevslot;
+                if(prevslot)
+                    prevslot->nextslot=scu;
+                prevslot=scu;
+                if(cl==0)
+                {
+                    if(dir==up)
+                    {
+                        scu->tag+=SLOT_IN_COIL;
+                        if(pl==0)
+                            scu->tag+=SLOT_IN_PHASE;
+                    }
+                }
+                SWITCH_COIL_DIR(dir);
+                scd=Layers[(slot+cl+m_PolarStep)%m_SlotCount];
                 scd->Phase=ph;
-                scd->CoilDirection=down;
+                scd->CoilDirection=dir;
                 scd->PoleNumber=pl;
-                if(!layer)
-                    ExtLayer.insert(slot+cl+m_PolarStep,scd);
-
+                scd->prevslot=prevslot;
+                if(prevslot)
+                    prevslot->nextslot=scd;
+                prevslot=scd;
+                if(cl==m_SlotPerPoleCount-1)
+                {
+                    if(dir==down)
+                    {
+                        scd->tag+=SLOT_OUT_COIL;
+                        if(pl==m_PoleCount-1)
+                            scd->tag+=SLOT_OUT_PHASE;
+                    }
+                }
+                SWITCH_COIL_DIR(dir);
                 cl++;
             }
-            slot+=m_PolarStep;
-            pl++;
+            if(prevslot)
+                prevslot->nextslot=scd;
+//            if(dir==up)
+//                dir=down;
+//            else
+//                dir=up;
+            slot+=(m_PolarStep*2);
+            slot%=m_SlotCount;
+            pl+=2;//1 coil=2 poles
+
         }
         ph++;
     }
-
 }
