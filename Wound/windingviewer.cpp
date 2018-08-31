@@ -29,7 +29,7 @@ void WindingViewer::paintEvent(QPaintEvent *)
     QPainter painter(this);
 
     painter.setPen(SlotColor);
-    painter.setBrush(QColor(255,127,127));
+//    painter.setBrush(QColor(255,127,127));
     painter.setFont(QFont("verdana",5));
     QFontMetrics fm=painter.fontMetrics();
     qreal sector=360.0/m_SlotCount;

@@ -146,6 +146,10 @@ void Windings::CalcWinding()
         int pl=0;
         while(pl<m_PoleCount) // indexing on pole but constructing coils ( 2 poles at a time)
         {
+            Phases[ph].Coils[pl/2].PhaseIdx=ph;
+            Phases[ph].Coils[pl/2].StartSlotIdx=(StartSlotIdx+(pl)*m_PolarStep);
+            Phases[ph].Coils[pl/2].StopLayerIdx=(StartSlotIdx+(pl+1)*m_PolarStep+m_BeamPerPole);
+            
             int bm=(m_BeamPerPole)-1;
             int nextidx=-1;
             int nextlayer=-1;

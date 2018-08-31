@@ -1,4 +1,4 @@
-#ifndef WINDINGS_H 
+#ifndef WINDINGS_H
 #define WINDINGS_H
 
 #include <QWidget>
@@ -52,29 +52,55 @@ protected:
     int m_SlotPerCoilCount;
     int m_SlotPerPoleCount;
 
-    enum coildirection{
+    int m_BeamPerPole;
+
+
+
+    enum BeamDir{
         up,
         down,
     };
-#define SLOT_STANDARD    0x0000
-#define SLOT_IN_COIL     0x0001
-#define SLOT_OUT_COIL    0x0002
-#define SLOT_IN_PHASE    0x0010
-#define SLOT_OUT_PHASE   0x0020
-    struct slotconfig{
-        int Id;
-        int Phase;
-        coildirection CoilDirection;
-        int PoleNumber;
-        slotconfig* prevslot; //-1=notset
-        slotconfig* nextslot; // same
-        int tag; // 0= not set -2=coil entry -3=coil exit -20=phase entry -30=phase exit
+
+    struct BeamDesc{
+        int PhaseIdx;
+        int PoleIdx;
+        BeamDir Dir;
+        int NextBeamIdx;
+        int NextBeamLayer;
+    };
+    enum CoilType{
+        Equal,
+        Concentric,
     };
 
-    QList <slotconfig*> Layers;
+    struct CoilDesc{
+        int StartSlotIdx;
+        int StartLayerIdx;
+        int StopSlotIdx;
+        int StopLayerIdx;
+        int PhaseIdx;
+        CoilType Type;
+    };
 
-    void calculate();
-    QColor SlotColor(slotconfig* s);
+    struct PhaseDesc{
+        QList <CoilDesc> Coils;
+        int StartSlotIdx;
+        int StartLayerIdx;
+        int StopSlotIdx;
+        int StopLayerIdx;
+    };
+
+    QList <PhaseDesc> Phases;
+
+
+    struct SlotDesc{
+        QList <BeamDesc> Beams;
+    };
+
+    QList <SlotDesc> Slots;
+    void ClearDatas();
+    void CalcWinding();
+    QColor BeamColor(BeamDesc b);
 
 };
 
