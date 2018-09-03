@@ -5,8 +5,8 @@ Windings::Windings(QWidget *parent) : QWidget(parent)
     m_PhaseCount=3;
     m_SlotCount=3;
     m_PoleCount=2;
-    m_WindingType=wt_wavy;
-
+    m_WindingType=wt_regular;
+    m_ClType=ct_regular;
     CalcWinding();
 }
 
@@ -47,9 +47,27 @@ void Windings::setPoleCount(int val)
 }
 void Windings::setWindingType(int val)
 {
-    if(val==m_WindingType)
+    if(val==(WindingType)m_WindingType)
         return;
-    m_WindingType=(windingtype)val;
+    m_WindingType=(WindingType)val;
+
+    CalcWinding();
+    repaint();
+}
+void Windings::setCoilType(int val)
+{
+    if(val==(CoilType)m_ClType)
+        return;
+    m_ClType=(CoilType)val;
+
+    CalcWinding();
+    repaint();
+}
+void Windings::setPhaseCoilType(int val)
+{
+    if(val==(PhaseCoilType)m_PhType)
+        return;
+    m_PhType=(PhaseCoilType)val;
 
     CalcWinding();
     repaint();
@@ -104,7 +122,7 @@ QColor Windings::BeamColor(BeamDesc b)
 {
     int R,V,B;
     int light=0;
-    if (b.Dir==down)
+    if (b.Dir==bd_down)
         light+=127;
     switch (b.PhaseIdx)
     {
@@ -115,7 +133,6 @@ QColor Windings::BeamColor(BeamDesc b)
     }
     return QColor(R,V,B);
 }
-
 void Windings::CalcWinding()
 {
     m_PolarStep=m_SlotCount/m_PoleCount;
@@ -124,7 +141,7 @@ void Windings::CalcWinding()
         case wt_interlaced:
             m_CoilGroupCount=m_PoleCount;
         break;
-        case wt_wavy:
+        case wt_regular:
         case wt_diametral:
             m_CoilGroupCount=m_PoleCount/2;
         break;
@@ -133,6 +150,19 @@ void Windings::CalcWinding()
     m_SlotPerPoleCount=m_SlotPerPhaseCount/m_PoleCount;
     m_SlotPerCoilGroupCount=m_SlotPerPhaseCount/m_CoilGroupCount;
     m_SlotPerCoilCount=m_SlotPerCoilGroupCount/2;
+    switch(m_WindingType)
+    {
+        case wt_regular:
+        default:
+            CalcWindingRegular();
+        break;
+    };
+
+}
+
+void Windings::CalcWindingRegular()
+{
+
     m_BeamPerPole=m_SlotCount/(m_PoleCount*m_PhaseCount);
 
     ClearDatas();
@@ -146,29 +176,41 @@ void Windings::CalcWinding()
         int pl=0;
         while(pl<m_PoleCount) // indexing on pole but constructing coils ( 2 poles at a time)
         {
+            Phases[ph].Coils[pl/2].PhaseIdx=ph;
+            Phases[ph].Coils[pl/2].StartSlotIdx=(StartSlotIdx+(pl)*m_PolarStep)%m_SlotCount;
+            Phases[ph].Coils[pl/2].StopSlotIdx=(StartSlotIdx+(pl+1)*m_PolarStep+m_BeamPerPole-1)%m_SlotCount;
+            Phases[ph].Coils[pl/2].StartLayerIdx=Slots[Phases[ph].Coils[pl/2].StartSlotIdx].Beams.count();
+            Phases[ph].Coils[pl/2].StopLayerIdx=Slots[Phases[ph].Coils[pl/2].StopSlotIdx].Beams.count();
+
             int bm=(m_BeamPerPole)-1;
             int nextidx=-1;
             int nextlayer=-1;
+
             while(bm>=0) // going backward for constructing is simpler to reference next index
             {
                 int slot=(StartSlotIdx+(pl+1)*m_PolarStep+bm)%m_SlotCount;
                 BeamDesc bdn;
                 bdn.NextBeamIdx=nextidx;
                 bdn.NextBeamLayer=nextlayer;
-                bdn.Dir=down;
+                bdn.Dir=bd_down;
                 bdn.PhaseIdx=ph;
                 bdn.PoleIdx=pl;
+                bdn.Idx=bm;
                 nextidx=slot;
                 nextlayer=Slots[slot].Beams.count();
                 Slots[slot].Beams.append(bdn);
+                if(m_ClType==ct_regular)
+                    slot=(StartSlotIdx+(pl)*m_PolarStep+bm)%m_SlotCount;
+                else
+                    slot=(StartSlotIdx+(pl)*m_PolarStep-bm+(m_BeamPerPole-1))%m_SlotCount;
 
-                slot=(StartSlotIdx+(pl)*m_PolarStep+bm)%m_SlotCount;
                 BeamDesc bup;
                 bup.NextBeamIdx=nextidx;
                 bup.NextBeamLayer=nextlayer;
-                bup.Dir=up;
+                bup.Dir=bd_up;
                 bup.PhaseIdx=ph;
                 bup.PoleIdx=pl;
+                bup.Idx=bm;
                 nextidx=slot;
                 nextlayer=Slots[slot].Beams.count();
                 Slots[slot].Beams.append(bup);
@@ -176,6 +218,9 @@ void Windings::CalcWinding()
             }
             pl+=2;//1 coil=2 poles
         }
+
+        Phases[ph].StopSlotIdx=Phases[ph].Coils.last().StopSlotIdx;
+        Phases[ph].StopLayerIdx=Phases[ph].Coils.last().StopLayerIdx;
         ph++;
     }
 }

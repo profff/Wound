@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
 // back view
     WindingViewer* wvb=new WindingViewer;
     wvb->setView(WindingViewer::TypeView::backView);
-    // from UI to winding calculator
+// from UI to winding calculator
     connect(ui->SlotCountEdit,SIGNAL(valueChanged(int)),wvb,SLOT(setSlotCount(int)));
     connect(ui->PoleCountEdit,SIGNAL(valueChanged(int)),wvb,SLOT(setPoleCount(int)));
     connect(ui->WindingTypeSelector,SIGNAL(currentIndexChanged(int)),wvb,SLOT(setWindingType(int)));
@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->SlotCountEdit,SIGNAL(valueChanged(int)),wfv,SLOT(setSlotCount(int)));
     connect(ui->PoleCountEdit,SIGNAL(valueChanged(int)),wfv,SLOT(setPoleCount(int)));
     connect(ui->WindingTypeSelector,SIGNAL(currentIndexChanged(int)),wfv,SLOT(setWindingType(int)));
+    connect(ui->CoilTypeSelector,SIGNAL(currentIndexChanged(int)),wfv,SLOT(setCoilType(int)));
     wfv->setSlotCount(48);
     ui->horizontalLayout_5->insertWidget(0,wfv);
 }

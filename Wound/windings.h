@@ -10,41 +10,47 @@ class Windings : public QWidget
     Q_OBJECT
 public:
     explicit Windings(QWidget *parent = nullptr);
+
+    enum WindingType{
+        wt_regular,
+        wt_interlaced,
+        wt_diametral,
+    };
+    enum PhaseCoilType{
+        pt_chain,
+        pt_parallel,
+    };
+    enum BeamDir{
+        bd_up,
+        bd_down,
+    };
+    enum CoilType{
+        ct_regular,
+        ct_Concentric,
+    };
     int SlotCount() const { return m_SlotCount; }
     int PhaseCount() const { return m_PhaseCount; }
     int PoleCount() const { return m_PoleCount; }
     int PolarStep() const { return m_PoleCount; }
-//    int CoilGroupCount() const {return m_CoilGroupCount;}
-//    int SlotPerPhaseCount() const {return m_SlotPerPhaseCount;}
-//    int SlotPreCoilGroupCount() const {return m_SlotPerCoilGroupCount;}
-//    int SlotPreCoilCount() const {return m_SlotPerCoilCount;}
-    int WindingType() const {return m_WindingType;}
 
 signals:
-//    void PolarStepChanged(int newValue);
-//    void CoilGroupCountChanged(int newValue);
-//    void SlotPerPhaseCountChanged(int newValue);
-//    void SlotPerCoildGroupCounthanged(int newValue);
-//    void SlotPerCoilCountChanged(int newValue);
 
 public slots:
     void setSlotCount(int val);
     void setPhaseCount(int val);
     void setPoleCount(int val);
     void setWindingType(int val);
+    void setCoilType(int val);
+    void setPhaseCoilType(int val);
 
 protected:
     int m_PhaseCount;
     int m_PoleCount;
     int m_SlotCount;
-    int m_PolarStep;
 
-    enum windingtype{
-        wt_wavy,
-        wt_interlaced,
-        wt_diametral,
-    };
-    windingtype m_WindingType;
+    WindingType m_WindingType;
+    PhaseCoilType m_PhType;
+    CoilType m_ClType;
 
     int m_CoilGroupCount;
     int m_SlotPerPhaseCount;
@@ -52,25 +58,16 @@ protected:
     int m_SlotPerCoilCount;
     int m_SlotPerPoleCount;
 
+    int m_PolarStep;
     int m_BeamPerPole;
-
-
-
-    enum BeamDir{
-        up,
-        down,
-    };
 
     struct BeamDesc{
         int PhaseIdx;
         int PoleIdx;
         BeamDir Dir;
+        int Idx;
         int NextBeamIdx;
         int NextBeamLayer;
-    };
-    enum CoilType{
-        Equal,
-        Concentric,
     };
 
     struct CoilDesc{
@@ -92,7 +89,6 @@ protected:
 
     QList <PhaseDesc> Phases;
 
-
     struct SlotDesc{
         QList <BeamDesc> Beams;
     };
@@ -100,6 +96,7 @@ protected:
     QList <SlotDesc> Slots;
     void ClearDatas();
     void CalcWinding();
+    void CalcWindingRegular();
     QColor BeamColor(BeamDesc b);
 
 };
